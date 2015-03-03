@@ -1,11 +1,14 @@
-// Пример синхронизации потоков в разных процессах
-// с использованием именованного события
 #include <windows.h>
 #include <iostream>
+
 using namespace std;
+
 HANDLE hInEvent[2];
+HANDLE hMutex;
 CHAR lpDashEventName[] = "DashEventName";
 CHAR lpDotventName[] = "DotEventName";
+CHAR lpMutex[] = "Mutex";
+
 int main()
 {
 	DWORD dwWaitResult;
@@ -14,9 +17,9 @@ int main()
 	PROCESS_INFORMATION pi;
 
 	int nCount = 0;
+	cout << "Enter number of processes : ";
 	if (!(cin >> nCount))
 		return 1;
-
 	hInEvent[0] = CreateEvent(NULL, FALSE, FALSE, lpDashEventName);
 	if (hInEvent[0] == NULL)
 		return GetLastError();
@@ -32,7 +35,17 @@ int main()
 			CREATE_NEW_CONSOLE, NULL, NULL, &si, &pi))
 			return 0;
 	}
-	while (true)
+
+	hMutex = CreateMutex(NULL, FALSE, lpMutex);
+	if (hMutex == NULL)
+	{
+		cout << "Create mutex failed." << endl;
+		cout << "Press any key to exit." << endl;
+		cin.get();
+		return GetLastError();
+	}
+
+	do
 	{
 		dwWaitResult = WaitForMultipleObjects(2, hInEvent, FALSE, INFINITE);
 		if (dwWaitResult == WAIT_OBJECT_0)
@@ -40,6 +53,8 @@ int main()
 		else
 			if (dwWaitResult == (WAIT_OBJECT_0 + 1))
 				cout << ".";
-	}
+		
+	} while (true);
+	
 	return 0;
 }

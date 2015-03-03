@@ -1,12 +1,12 @@
-// Пример синхронизации потоков в разных процессах
-// с использованием именованного события
 #include <windows.h>
 #include <iostream>
 #include <conio.h>
 using namespace std;
 HANDLE hInEvent[2];
+HANDLE hMutex;
 CHAR lpDashEventName[] = "DashEventName";
 CHAR lpDotventName[] = "DotEventName";
+CHAR lpMutex[] = "Mutex";
 int main()
 {
 	char c;
@@ -26,7 +26,16 @@ int main()
 		cin >> c;
 		return GetLastError();
 	}
-	c = _getche();
+	hMutex = OpenMutex(SYNCHRONIZE, FALSE, lpMutex);
+	if (hMutex == NULL)
+	{
+		cout << "Open mutex failed." << endl;
+		cout << "Press any key to exit." << endl;
+		cin.get();
+		return GetLastError();
+	}		
+	c = _getch();
+	WaitForSingleObject(hMutex, INFINITE);
 	while (c == '-' || c == '.')
 	{
 		if (c == '-')
@@ -34,7 +43,8 @@ int main()
 		else
 			if (c == '.')
 				SetEvent(hInEvent[1]);
-		c = _getche();
+		c = _getch();
 	}
+	ReleaseMutex(hMutex);
 	return 0;
 }
